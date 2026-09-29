@@ -182,6 +182,9 @@ interface StatStub {
   value: number;
 }
 
+// Set TRAFFIC_DEBUG=1 to log what the engine actually reports each poll.
+const trafficDebug = process.env.TRAFFIC_DEBUG === "1";
+
 function queryStats(): StatStub[] | null {
   if (!fs.existsSync(binPath()) || !running) return [];
   const res = spawnSync(
@@ -193,12 +196,35 @@ function queryStats(): StatStub[] | null {
   // Returning null signals "unknown" so the caller skips this tick instead of
   // treating it as "zero traffic" — the -reset already wiped Xray's counters
   // if it partially ran, but a hard failure means nothing was reset.
-  if (res.status !== 0) return null;
-  if (!res.stdout) return [];
+  if (res.status !== 0) {
+    if (trafficDebug) {
+      console.log(
+        `[traffic] statsquery FAILED status=${res.status} err=${(res.stderr || "").trim()}`,
+      );
+    }
+    return null;
+  }
+  if (!res.stdout) {
+    if (trafficDebug) console.log("[traffic] statsquery returned empty stdout");
+    return [];
+  }
   try {
     const parsed = JSON.parse(res.stdout) as { stat?: StatStub[] };
-    return parsed.stat || [];
-  } catch {
+    const stats = parsed.stat || [];
+    if (trafficDebug) {
+      if (stats.length === 0) {
+        console.log("[traffic] poll: no stats (0 counters)");
+      } else {
+        const summary = stats
+          .filter((s) => s.value > 0)
+          .map((s) => `${s.name}=${s.value}`)
+          .join(", ");
+        console.log(`[traffic] poll: ${summary || "all zero"}`);
+      }
+    }
+    return stats;
+  } catch (e) {
+    if (trafficDebug) console.log(`[traffic] JSON parse failed: ${(e as Error).message}`);
     return null;
   }
 }
