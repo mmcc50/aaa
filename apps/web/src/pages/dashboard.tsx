@@ -118,7 +118,7 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-heading text-3xl">{t("dashboard")}</h1>
+          <h1 className="font-heading text-2xl sm:text-3xl">{t("dashboard")}</h1>
           <p className="text-sm font-base text-text/60">{t("liveMetrics")}</p>
         </div>
         <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center">
@@ -131,7 +131,7 @@ export default function DashboardPage() {
             ) : (
               <CircleX className="h-4 w-4 shrink-0" />
             )}
-            <span className="truncate">Xray · {s?.xray.running ? t("running") : t("stopped")}</span>
+            <span className="truncate">Engine · {s?.xray.running ? t("running") : t("stopped")}</span>
           </Badge>
           <Button
             variant="neutral"

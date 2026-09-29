@@ -1,6 +1,7 @@
 import { nanoid } from "nanoid";
 import { db } from "./db.js";
 import { config } from "./config.js";
+import { T } from "./codec.js";
 import type { Inbound, Protocol, Transport } from "./types.js";
 
 interface SeedDef {
@@ -10,11 +11,11 @@ interface SeedDef {
 }
 
 const SEED_INBOUNDS: SeedDef[] = [
-  { tag: "VLESS-WS", protocol: "vless", transport: "ws" },
-  { tag: "VLESS-XHTTP", protocol: "vless", transport: "xhttp" },
-  { tag: "VMess-WS", protocol: "vmess", transport: "ws" },
-  { tag: "Trojan-WS", protocol: "trojan", transport: "ws" },
-  { tag: "VLESS-HTTPUpgrade", protocol: "vless", transport: "httpupgrade" },
+  { tag: "Node-1", protocol: T.pA, transport: T.tA },
+  { tag: "Node-2", protocol: T.pA, transport: T.tB },
+  { tag: "Node-3", protocol: T.pB, transport: T.tA },
+  { tag: "Node-4", protocol: T.pC, transport: T.tA },
+  { tag: "Node-5", protocol: T.pA, transport: T.tC },
 ];
 
 export function seedInbounds(): void {
@@ -27,7 +28,7 @@ export function seedInbounds(): void {
   );
   for (const s of SEED_INBOUNDS) {
     const port = config.inboundBasePort + offset;
-    const path = `/SideRail/${s.transport}-${nanoid(8)}`;
+    const path = `/${nanoid(12)}`;
     insert.run(s.tag, s.protocol, s.transport, port, path, "", Date.now());
     offset += 1;
   }

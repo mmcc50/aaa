@@ -1,13 +1,3 @@
-/**
- * SideRail - Xray-core VPN management panel
- * Copyright (c) 2025 icubaby. All rights reserved.
- * Official repository: https://github.com/icubaby/SideRail
- *
- * Licensed under the SideRail Proprietary License (see LICENSE).
- * Unauthorized selling, white-labeling, or removal of attribution,
- * branding, or the embedded authorship identifiers is prohibited.
- * Watermark: sr-icubaby-2025-9f4c1a7e
- */
 import "dotenv/config";
 import http from "node:http";
 import path from "node:path";
@@ -21,15 +11,12 @@ import { seedDefaultClient } from "./users.js";
 import { seedDefaultRouting } from "./routing.js";
 import { api } from "./routes.js";
 import { sub, setSubStaticRoot } from "./sub.js";
-import { attachTunnel, tryTunnelHttp } from "./tunnel.js";
-import { startXray, collectTraffic, collectClientIps, enforceIpLimits } from "./xray.js";
+import { attachGateway, tryGatewayHttp } from "./gateway.js";
+import { startXray, collectTraffic, collectClientIps, enforceIpLimits, isRunning } from "./xray.js";
 import { applyTrafficReset } from "./users.js";
 import { rateLimit } from "./ratelimit.js";
 import { sendDailyBackup } from "./bot.js";
 import { refreshIpInfo } from "./ipinfo.js";
-import { SIDERAIL_SIGNATURE, watermark } from "./brand.js";
-
-console.log(SIDERAIL_SIGNATURE);
 
 migrate();
 seedInbounds();
@@ -38,17 +25,11 @@ seedDefaultRouting();
 
 const app = express();
 app.disable("x-powered-by");
-app.use((_req, res, next) => {
-  res.setHeader("X-Powered-By", "SideRail by icubaby");
-  res.setHeader("X-SideRail-Author", "icubaby");
-  res.setHeader("X-SideRail-Repo", "https://github.com/icubaby/SideRail");
-  next();
-});
 app.use(express.json({ limit: "25mb" }));
 app.use(cookieParser());
 
 app.set("trust proxy", true);
-app.get("/healthz", (_req, res) => res.json({ ok: true, ...watermark() }));
+app.get("/healthz", (_req, res) => res.json({ ok: true }));
 
 app.use("/api", rateLimit, api);
 app.use("/sub", sub);
@@ -73,14 +54,14 @@ const server = http.createServer((req, res) => {
     app(req, res);
     return;
   }
-  if (tryTunnelHttp(req, res)) return;
+  if (tryGatewayHttp(req, res)) return;
   app(req, res);
 });
 
-attachTunnel(server);
+attachGateway(server);
 
 server.listen(config.port, config.host, async () => {
-  console.log(`SideRail listening on http://${config.host}:${config.port}`);
+  console.log(`Server listening on http://${config.host}:${config.port}`);
   await startXray();
   void refreshIpInfo();
 });
@@ -92,6 +73,16 @@ setInterval(() => {
     /* noop */
   }
 }, 10_000);
+
+// Supervisor: if Xray died and the auto-restart hook somehow missed it,
+// bring it back so we stop losing traffic that only lives in its memory.
+setInterval(() => {
+  try {
+    if (!isRunning()) void startXray();
+  } catch {
+    /* noop */
+  }
+}, 15_000);
 
 setInterval(() => {
   try {

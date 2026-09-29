@@ -56,8 +56,8 @@ function Brand() {
         <RailLogo className="h-5 w-5" />
       </div>
       <div className="leading-tight">
-        <div className="font-heading text-lg tracking-tight">SideRail</div>
-        <div className="text-[10px] uppercase tracking-widest text-text/60">icubaby</div>
+        <div className="font-heading text-lg tracking-tight">Panel</div>
+        <div className="text-[10px] uppercase tracking-widest text-text/60">dashboard</div>
       </div>
     </div>
   );
@@ -191,8 +191,8 @@ export function AppLayout() {
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b-2 border-border bg-bg/80 px-4 backdrop-blur lg:px-8">
-            <div className="flex items-center gap-3 lg:hidden">
+          <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-2 border-b-2 border-border bg-bg/80 px-3 backdrop-blur sm:px-4 lg:px-8">
+            <div className="flex min-w-0 items-center gap-2 sm:gap-3 lg:hidden">
               <Button
                 variant="neutral"
                 size="icon"
@@ -207,12 +207,12 @@ export function AppLayout() {
               <GitHubButton showStars={false} />
               <VersionBadge />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2">
               <a
                 href={GITHUB_URL}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-1.5 rounded-base border-2 border-border bg-bw px-2 py-1.5 transition-all hover:bg-main hover:text-mtext lg:hidden"
+                className="hidden items-center gap-1.5 rounded-base border-2 border-border bg-bw px-2 py-1.5 transition-all hover:bg-main hover:text-mtext sm:flex lg:hidden"
                 title="GitHub"
               >
                 <Github className="h-4 w-4" />
@@ -312,7 +312,7 @@ export function AppLayout() {
             </div>
           </header>
 
-          <main className="flex-1 p-4 lg:p-8">
+          <main className="flex-1 p-3 sm:p-4 lg:p-8">
             <div className="mx-auto max-w-7xl animate-fade-in">
               <Outlet />
             </div>
@@ -324,17 +324,17 @@ export function AppLayout() {
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-overlay" onClick={() => setMobileOpen(false)} />
-          <div className="absolute left-0 top-0 h-full w-72 border-r-2 border-border bg-bg p-4 animate-fade-in">
-            <div className="flex items-center justify-between">
+          <div className="absolute left-0 top-0 flex h-full w-72 max-w-[85vw] flex-col border-r-2 border-border bg-bg p-4 animate-fade-in">
+            <div className="flex shrink-0 items-center justify-between">
               <Brand />
               <Button variant="neutral" size="icon" onClick={() => setMobileOpen(false)}>
                 <X className="h-5 w-5" />
               </Button>
             </div>
-            <div className="mt-6">
+            <div className="mt-6 min-h-0 flex-1 overflow-y-auto">
               <NavItems can={can} isOwner={isOwner} t={t as never} onNavigate={() => setMobileOpen(false)} />
             </div>
-            <div className="absolute inset-x-4 bottom-4">
+            <div className="mt-4 shrink-0">
               <a
                 href={GITHUB_URL}
                 target="_blank"

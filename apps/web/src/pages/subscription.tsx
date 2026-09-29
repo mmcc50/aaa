@@ -44,11 +44,12 @@ import { Progress } from "@/components/ui/progress";
 import { formatBytes, formatDate, relativeTime, cn } from "@/lib/utils";
 import type { SubData, SubLink } from "@/lib/types";
 
-const protocolColor: Record<string, string> = {
-  vless: "#a3e635",
-  vmess: "#7dd3fc",
-  trojan: "#f0abfc",
-};
+const protoColors = ["#a3e635", "#7dd3fc", "#f0abfc"];
+function protoColor(key: string): string {
+  let h = 0;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+  return protoColors[h % protoColors.length];
+}
 
 function useSubData(token: string | undefined) {
   return useQuery<SubData | { expired: true }>({
@@ -156,7 +157,7 @@ export default function SubscriptionPage() {
               <RailLogo className="h-7 w-7" />
             </div>
             <div className="min-w-0">
-              <div className="font-heading text-2xl leading-tight">SideRail</div>
+              <div className="font-heading text-2xl leading-tight">Panel</div>
               <div className="truncate text-sm font-base text-text/60">{user.email}</div>
             </div>
           </div>
@@ -298,9 +299,9 @@ export default function SubscriptionPage() {
             </Button>
           </div>
           <div className="grid grid-cols-3 gap-2">
-            <CopyButton value={subUrl} label="V2ray" className="w-full" />
-            <CopyButton value={`${subUrl}/clash`} label="Clash" className="w-full" />
-            <CopyButton value={`${subUrl}/singbox`} label="Sing-box" className="w-full" />
+            <CopyButton value={subUrl} label="Link" className="w-full" />
+            <CopyButton value={`${subUrl}/clash`} label="Config A" className="w-full" />
+            <CopyButton value={`${subUrl}/singbox`} label="Config B" className="w-full" />
           </div>
           <p className="text-center text-[11px] font-base text-text/40">{t("copyHint")}</p>
         </div>
@@ -317,7 +318,7 @@ export default function SubscriptionPage() {
                 <CardContent className="flex items-center gap-2.5 p-3 sm:gap-3 sm:p-4">
                   <div
                     className="grid h-10 w-10 shrink-0 place-items-center rounded-base border-2 border-border font-heading text-black uppercase sm:h-11 sm:w-11"
-                    style={{ background: protocolColor[link.protocol] || "#a3e635" }}
+                    style={{ background: protoColor(link.protocol) }}
                   >
                     {link.protocol.slice(0, 2)}
                   </div>

@@ -288,7 +288,7 @@ export default function UsersPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-heading text-3xl">{t("users")}</h1>
+          <h1 className="font-heading text-2xl sm:text-3xl">{t("users")}</h1>
           <p className="text-sm font-base text-text/60">{t("manageClients")}</p>
         </div>
         <Button onClick={openNew} className="w-full sm:w-auto">

@@ -1,5 +1,5 @@
-export type Protocol = "vless" | "vmess" | "trojan";
-export type Transport = "ws" | "xhttp" | "httpupgrade";
+export type Protocol = string;
+export type Transport = string;
 export type TrafficReset = "never" | "daily" | "weekly" | "monthly";
 
 export interface Inbound {

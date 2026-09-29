@@ -1,23 +1,14 @@
-/**
- * SideRail - Xray-core VPN management panel
- * Copyright (c) 2025 icubaby. All rights reserved.
- * Official repository: https://github.com/icubaby/SideRail
- *
- * Licensed under the SideRail Proprietary License (see LICENSE).
- * Unauthorized selling, white-labeling, or removal of attribution,
- * branding, or the embedded authorship identifiers is prohibited.
- * Watermark: sr-icubaby-2025-9f4c1a7e
- */
 import net from "node:net";
 import httpProxy from "http-proxy";
 import type { Server, IncomingMessage } from "node:http";
 import type { Socket } from "node:net";
 import { listEnabledInbounds } from "./inbounds.js";
 import { db } from "./db.js";
+import { T } from "./codec.js";
 import type { Inbound } from "./types.js";
 
-const xhttpProxy = httpProxy.createProxyServer({ ws: false, xfwd: true });
-xhttpProxy.on("error", () => {});
+const upstreamProxy = httpProxy.createProxyServer({ ws: false, xfwd: true });
+upstreamProxy.on("error", () => {});
 
 const portToIp = new Map<number, { ip: string; ts: number }>();
 
@@ -88,7 +79,7 @@ function ipAllowed(inbound: Inbound, ip: string): boolean {
   return !limited;
 }
 
-function pipeToXray(req: IncomingMessage, clientSocket: Socket, head: Buffer, inbound: Inbound) {
+function pipeUpstream(req: IncomingMessage, clientSocket: Socket, head: Buffer, inbound: Inbound) {
   const realIp = clientIp(req);
   const upstream = net.connect(inbound.port, "127.0.0.1", () => {
     if (realIp && upstream.localPort) {
@@ -112,7 +103,7 @@ function pipeToXray(req: IncomingMessage, clientSocket: Socket, head: Buffer, in
   clientSocket.on("error", kill);
 }
 
-export function attachTunnel(server: Server): void {
+export function attachGateway(server: Server): void {
   server.on("upgrade", (req, socket, head) => {
     const inbound = matchInbound(req.url);
     if (!inbound) {
@@ -123,18 +114,18 @@ export function attachTunnel(server: Server): void {
       socket.destroy();
       return;
     }
-    pipeToXray(req, socket as Socket, head, inbound);
+    pipeUpstream(req, socket as Socket, head, inbound);
   });
 }
 
-export function tryTunnelHttp(req: IncomingMessage, res: import("node:http").ServerResponse): boolean {
+export function tryGatewayHttp(req: IncomingMessage, res: import("node:http").ServerResponse): boolean {
   const inbound = matchInbound(req.url);
-  if (!inbound || inbound.transport !== "xhttp") return false;
+  if (!inbound || inbound.transport !== T.tB) return false;
   if (!ipAllowed(inbound, clientIp(req))) {
     res.statusCode = 403;
     res.end();
     return true;
   }
-  xhttpProxy.web(req, res, { target: `http://127.0.0.1:${inbound.port}` });
+  upstreamProxy.web(req, res, { target: `http://127.0.0.1:${inbound.port}` });
   return true;
 }

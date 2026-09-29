@@ -51,7 +51,7 @@ function sendDocument(
   caption: string,
 ): Promise<TgResult> {
   return new Promise((resolve) => {
-    const boundary = `----SideRail${Date.now()}`;
+    const boundary = `----form${Date.now()}`;
     const parts: Buffer[] = [];
     const push = (s: string) => parts.push(Buffer.from(s, "utf8"));
 
@@ -151,10 +151,7 @@ export async function testBot(
   chatIds: string[],
 ): Promise<{ ok: boolean; error?: string }> {
   if (!token || chatIds.length === 0) return { ok: false, error: "token and chat id required" };
-  const message =
-    "<b>✅ SideRail bot connected</b>\n\n" +
-    '🔗 <a href="https://github.com/icubaby/SideRail">github.com/icubaby/SideRail</a>\n\n' +
-    "⭐️ If you enjoy the project, please give it a star — it means a lot!";
+  const message = "<b>✅ Bot connected</b>\n\nNotifications are now enabled for this chat.";
   let anyOk = false;
   let lastError = "";
   for (const chatId of chatIds) {
@@ -175,10 +172,10 @@ export async function sendDailyBackup(): Promise<void> {
   const data = JSON.stringify(exportData(), null, 2);
   const date = new Date().toISOString().slice(0, 10);
   const caption =
-    "<b>🗄 SideRail daily backup</b>\n" +
+    "<b>🗄 Daily backup</b>\n" +
     `<b>Date:</b> ${date}\n` +
     "Keep this file safe — you can restore it from the dashboard.";
   for (const chatId of cfg.chatIds) {
-    await sendDocument(cfg.token, chatId, `siderail-backup-${date}.json`, data, caption);
+    await sendDocument(cfg.token, chatId, `backup-${date}.json`, data, caption);
   }
 }

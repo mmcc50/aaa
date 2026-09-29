@@ -1,5 +1,6 @@
 import type { Inbound, UserWithInbounds } from "./types.js";
 import { getSetting } from "./db.js";
+import { T } from "./codec.js";
 
 function cleanAddr(host: string): string {
   const clean = (getSetting("clean_address") || "").trim();
@@ -13,10 +14,10 @@ interface Ctx {
 }
 
 function net(inbound: Inbound): string {
-  return inbound.transport === "xhttp" ? "xhttp" : inbound.transport;
+  return inbound.transport === T.tB ? T.tB : inbound.transport;
 }
 
-function clashProxy(ctx: Ctx): Record<string, unknown> | null {
+function outboundA(ctx: Ctx): Record<string, unknown> | null {
   const { user, inbound, host } = ctx;
   const addr = cleanAddr(host);
   const name = `${inbound.tag}`;
@@ -26,27 +27,27 @@ function clashProxy(ctx: Ctx): Record<string, unknown> | null {
     headers: { Host: host },
   };
 
-  if (inbound.protocol === "vless") {
-    if (inbound.transport === "xhttp") return null;
+  if (inbound.protocol === T.pA) {
+    if (inbound.transport === T.tB) return null;
     return {
       name,
-      type: "vless",
+      type: T.pA,
       server: addr,
       port: 443,
       uuid: user.uuid,
       udp: true,
       tls: true,
       servername: host,
-      network: inbound.transport === "httpupgrade" ? "ws" : "ws",
+      network: T.tA,
       "client-fingerprint": user.fingerprint || "chrome",
       alpn,
       "ws-opts": wsOpts,
     };
   }
-  if (inbound.protocol === "vmess") {
+  if (inbound.protocol === T.pB) {
     return {
       name,
-      type: "vmess",
+      type: T.pB,
       server: addr,
       port: 443,
       uuid: user.uuid,
@@ -55,7 +56,7 @@ function clashProxy(ctx: Ctx): Record<string, unknown> | null {
       udp: true,
       tls: true,
       servername: host,
-      network: "ws",
+      network: T.tA,
       "client-fingerprint": user.fingerprint || "chrome",
       alpn,
       "ws-opts": wsOpts,
@@ -63,13 +64,13 @@ function clashProxy(ctx: Ctx): Record<string, unknown> | null {
   }
   return {
     name,
-    type: "trojan",
+    type: T.pC,
     server: addr,
     port: 443,
     password: user.password,
     udp: true,
     sni: host,
-    network: "ws",
+    network: T.tA,
     "client-fingerprint": user.fingerprint || "chrome",
     alpn,
     "ws-opts": wsOpts,
@@ -83,7 +84,7 @@ export function buildClashConfig(
 ): string {
   const proxies = inbounds
     .filter((ib) => ib.enabled && user.inbound_ids.includes(ib.id))
-    .map((inbound) => clashProxy({ host, user, inbound }))
+    .map((inbound) => outboundA({ host, user, inbound }))
     .filter((p): p is Record<string, unknown> => p !== null);
 
   const names = proxies.map((p) => p.name as string);
@@ -100,15 +101,15 @@ export function buildClashConfig(
     yaml.push(`  - { ${parts.join(", ")} }`);
   }
   yaml.push("proxy-groups:");
-  yaml.push(`  - name: SideRail`);
+  yaml.push(`  - name: PROXY`);
   yaml.push(`    type: select`);
   yaml.push(`    proxies: [${names.join(", ")}]`);
   yaml.push("rules:");
-  yaml.push("  - MATCH,SideRail");
+  yaml.push("  - MATCH,PROXY");
   return yaml.join("\n");
 }
 
-function singboxOutbound(ctx: Ctx): Record<string, unknown> | null {
+function outboundB(ctx: Ctx): Record<string, unknown> | null {
   const { user, inbound, host } = ctx;
   const addr = cleanAddr(host);
   const tag = inbound.tag;
@@ -119,13 +120,13 @@ function singboxOutbound(ctx: Ctx): Record<string, unknown> | null {
     alpn: user.alpn ? user.alpn.split(",").map((a) => a.trim()) : undefined,
   };
   const transport =
-    inbound.transport === "xhttp"
-      ? { type: "http", path: inbound.path, host: [host] }
-      : { type: "ws", path: inbound.path, headers: { Host: host } };
+    inbound.transport === T.tB
+      ? { type: T.http, path: inbound.path, host: [host] }
+      : { type: T.tA, path: inbound.path, headers: { Host: host } };
 
-  if (inbound.protocol === "vless") {
+  if (inbound.protocol === T.pA) {
     return {
-      type: "vless",
+      type: T.pA,
       tag,
       server: addr,
       server_port: 443,
@@ -134,9 +135,9 @@ function singboxOutbound(ctx: Ctx): Record<string, unknown> | null {
       transport,
     };
   }
-  if (inbound.protocol === "vmess") {
+  if (inbound.protocol === T.pB) {
     return {
-      type: "vmess",
+      type: T.pB,
       tag,
       server: addr,
       server_port: 443,
@@ -148,7 +149,7 @@ function singboxOutbound(ctx: Ctx): Record<string, unknown> | null {
     };
   }
   return {
-    type: "trojan",
+    type: T.pC,
     tag,
     server: addr,
     server_port: 443,
@@ -165,7 +166,7 @@ export function buildSingboxConfig(
 ): string {
   const outbounds = inbounds
     .filter((ib) => ib.enabled && user.inbound_ids.includes(ib.id))
-    .map((inbound) => singboxOutbound({ host, user, inbound }))
+    .map((inbound) => outboundB({ host, user, inbound }))
     .filter((o): o is Record<string, unknown> => o !== null);
 
   const tags = outbounds.map((o) => o.tag as string);
@@ -174,7 +175,7 @@ export function buildSingboxConfig(
     outbounds: [
       {
         type: "selector",
-        tag: "SideRail",
+        tag: "PROXY",
         outbounds: [...tags, "direct"],
         default: tags[0],
       },

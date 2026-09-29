@@ -211,15 +211,15 @@ const en = {
   panelInitialized: "Panel initialized",
   passwordsMismatch: "Passwords do not match",
   welcomeBack: "Welcome back",
-  signInPanel: "Sign in to your SideRail panel",
+  signInPanel: "Sign in to your panel",
   signIn: "Sign in",
   signingIn: "Signing in...",
   enterCredentials: "Enter your username and password",
   oneClickDeploy: "One-click Railway deployment",
-  protocolsFeature: "VLESS · VMess · Trojan over WS / XHTTP / HTTPUpgrade",
+  protocolsFeature: "Multiple transports over WS / XHTTP / HTTPUpgrade",
   tlsFeature: "TLS terminated at the edge on port 443",
   subPagesFeature: "Beautiful subscription pages with live usage",
-  xrayAutoFetch: "Xray-core v26.9.9 fetched automatically on first boot",
+  xrayAutoFetch: "Core engine fetched automatically on first boot",
 
   // subscription
   loadingSub: "Loading subscription…",
@@ -245,7 +245,7 @@ const en = {
   subscriptionQr: "Subscription QR",
   scanImport: "Scan to import the full subscription into your client.",
   copyConfig: "Copy config",
-  copyHint: "Copy the link for your client: V2rayN / V2rayNG use base64, Clash Meta uses Clash, sing-box uses Sing-box.",
+  copyHint: "Copy the link and import it into your client app.",
 
   // activity labels
   actSignedIn: "Signed in",
@@ -274,7 +274,7 @@ const en = {
   detailPanelInit: "panel initialized",
 
   // welcome dialog
-  welcomeTitle: "Welcome to SideRail",
+  welcomeTitle: "Welcome",
   welcomeCrafted: "This panel is crafted with care by",
   welcomeFree: "completely free",
   welcomeAndShared: "and shared",
@@ -491,15 +491,15 @@ const ru: Dict = {
   panelInitialized: "Панель инициализирована",
   passwordsMismatch: "Пароли не совпадают",
   welcomeBack: "С возвращением",
-  signInPanel: "Войдите в свою панель SideRail",
+  signInPanel: "Войдите в свою панель",
   signIn: "Войти",
   signingIn: "Вход...",
   enterCredentials: "Введите имя пользователя и пароль",
   oneClickDeploy: "Развёртывание на Railway в один клик",
-  protocolsFeature: "VLESS · VMess · Trojan через WS / XHTTP / HTTPUpgrade",
+  protocolsFeature: "Несколько транспортов через WS / XHTTP / HTTPUpgrade",
   tlsFeature: "TLS завершается на границе на порту 443",
   subPagesFeature: "Красивые страницы подписки со статистикой в реальном времени",
-  xrayAutoFetch: "Xray-core v26.9.9 загружается автоматически при первом запуске",
+  xrayAutoFetch: "Движок загружается автоматически при первом запуске",
 
   loadingSub: "Загрузка подписки…",
   subNotFound: "Подписка не найдена",
@@ -524,8 +524,7 @@ const ru: Dict = {
   subscriptionQr: "QR подписки",
   scanImport: "Отсканируйте, чтобы импортировать всю подписку в клиент.",
   copyConfig: "Копировать конфиг",
-  copyHint:
-    "Скопируйте ссылку для вашего клиента: V2rayN / V2rayNG — base64, Clash Meta — Clash, sing-box — Sing-box.",
+  copyHint: "Скопируйте ссылку и импортируйте её в ваше клиентское приложение.",
 
   actSignedIn: "Вход выполнен",
   actFailedLogin: "Неудачный вход",
@@ -552,7 +551,7 @@ const ru: Dict = {
   actBotTest: "Бот проверен",
   detailPanelInit: "панель инициализирована",
 
-  welcomeTitle: "Добро пожаловать в SideRail",
+  welcomeTitle: "Добро пожаловать",
   welcomeCrafted: "Эта панель создана с заботой автором",
   welcomeFree: "полностью бесплатно",
   welcomeAndShared: "и распространяется",
@@ -764,15 +763,15 @@ const zh: Dict = {
   panelInitialized: "面板已初始化",
   passwordsMismatch: "两次密码不一致",
   welcomeBack: "欢迎回来",
-  signInPanel: "登录你的 SideRail 面板",
+  signInPanel: "登录你的面板",
   signIn: "登录",
   signingIn: "登录中...",
   enterCredentials: "请输入用户名和密码",
   oneClickDeploy: "在 Railway 上一键部署",
-  protocolsFeature: "VLESS · VMess · Trojan（WS / XHTTP / HTTPUpgrade）",
+  protocolsFeature: "多种传输方式（WS / XHTTP / HTTPUpgrade）",
   tlsFeature: "TLS 在边缘 443 端口终止",
   subPagesFeature: "精美的订阅页面，实时显示用量",
-  xrayAutoFetch: "首次启动时自动获取 Xray-core v26.9.9",
+  xrayAutoFetch: "首次启动时自动获取核心引擎",
 
   loadingSub: "正在加载订阅…",
   subNotFound: "未找到订阅",
@@ -797,7 +796,7 @@ const zh: Dict = {
   subscriptionQr: "订阅二维码",
   scanImport: "扫描以将整个订阅导入你的客户端。",
   copyConfig: "复制配置",
-  copyHint: "为你的客户端复制链接：V2rayN / V2rayNG 用 base64，Clash Meta 用 Clash，sing-box 用 Sing-box。",
+  copyHint: "复制链接并导入到你的客户端应用。",
 
   actSignedIn: "已登录",
   actFailedLogin: "登录失败",
@@ -824,7 +823,7 @@ const zh: Dict = {
   actBotTest: "测试了机器人",
   detailPanelInit: "面板已初始化",
 
-  welcomeTitle: "欢迎使用 SideRail",
+  welcomeTitle: "欢迎",
   welcomeCrafted: "此面板由以下作者精心打造",
   welcomeFree: "完全免费",
   welcomeAndShared: "并分享",

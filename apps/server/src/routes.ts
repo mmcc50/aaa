@@ -1,13 +1,3 @@
-/**
- * SideRail - Xray-core VPN management panel
- * Copyright (c) 2025 icubaby. All rights reserved.
- * Official repository: https://github.com/icubaby/SideRail
- *
- * Licensed under the SideRail Proprietary License (see LICENSE).
- * Unauthorized selling, white-labeling, or removal of attribution,
- * branding, or the embedded authorship identifiers is prohibited.
- * Watermark: sr-icubaby-2025-9f4c1a7e
- */
 import { Router } from "express";
 import { z } from "zod";
 import {
@@ -94,7 +84,7 @@ function setAuthCookie(res: import("express").Response, token: string): void {
 }
 
 api.get("/status", (_req, res) => {
-  res.json({ setup: isSetupDone(), name: "SideRail" });
+  res.json({ setup: isSetupDone(), name: "Panel" });
 });
 
 api.post("/setup", (req, res) => {
@@ -321,7 +311,7 @@ api.delete("/activity", requirePermission("activity"), (req: AuthedRequest, res)
 api.get("/settings", requirePermission("settings"), (_req, res) => {
   res.json({
     xrayVersion: getSetting("xray_version") || "",
-    subTitle: getSetting("sub_title") || "SideRail",
+    subTitle: getSetting("sub_title") || "Panel",
   });
 });
 
@@ -437,7 +427,7 @@ api.delete("/admins/:id", requireOwner, (req: AuthedRequest, res) => {
 api.get("/backup/export", requirePermission("dashboard"), (req: AuthedRequest, res) => {
   logActivity(req.admin!.username, "backup_export", "");
   res.setHeader("Content-Type", "application/json");
-  res.setHeader("Content-Disposition", `attachment; filename="siderail-backup-${Date.now()}.json"`);
+  res.setHeader("Content-Disposition", `attachment; filename="backup-${Date.now()}.json"`);
   res.send(JSON.stringify(exportData(), null, 2));
 });
 

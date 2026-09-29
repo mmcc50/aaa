@@ -98,7 +98,7 @@ export default function RoutingPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-heading text-3xl">{t("routing")}</h1>
+        <h1 className="font-heading text-2xl sm:text-3xl">{t("routing")}</h1>
         <p className="text-sm font-base text-text/60">{t("routingDesc")}</p>
       </div>
 

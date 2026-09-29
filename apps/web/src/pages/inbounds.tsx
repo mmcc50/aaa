@@ -8,11 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import type { Inbound } from "@/lib/types";
 
-const protocolAccent: Record<string, string> = {
-  vless: "#a3e635",
-  vmess: "#7dd3fc",
-  trojan: "#f0abfc",
-};
+const accents = ["#a3e635", "#7dd3fc", "#f0abfc"];
+function accentFor(key: string): string {
+  let h = 0;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+  return accents[h % accents.length];
+}
 
 export default function InboundsPage() {
   const toast = useToast();
@@ -41,7 +42,7 @@ export default function InboundsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-heading text-3xl">{t("inbounds")}</h1>
+          <h1 className="font-heading text-2xl sm:text-3xl">{t("inbounds")}</h1>
           <p className="text-sm font-base text-text/60">{t("inboundsDesc")}</p>
         </div>
         <Badge variant="info" className="h-9 gap-1.5 px-3">
@@ -61,7 +62,7 @@ export default function InboundsPage() {
                 <div className="flex min-w-0 items-center gap-2">
                   <div
                     className="grid h-9 w-9 shrink-0 place-items-center rounded-base border-2 border-border font-heading text-sm uppercase text-black"
-                    style={{ background: protocolAccent[ib.protocol] || "#a3e635" }}
+                    style={{ background: accentFor(ib.protocol) }}
                   >
                     {ib.protocol.slice(0, 2)}
                   </div>

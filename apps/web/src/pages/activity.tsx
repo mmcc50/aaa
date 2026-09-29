@@ -74,7 +74,7 @@ export default function ActivityPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-heading text-3xl">{t("activityLog")}</h1>
+          <h1 className="font-heading text-2xl sm:text-3xl">{t("activityLog")}</h1>
           <p className="text-sm font-base text-text/60">{t("recentEvents")}</p>
         </div>
         <Button variant="danger" onClick={() => clearMut.mutate()} disabled={entries.length === 0}>

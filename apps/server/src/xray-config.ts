@@ -1,27 +1,18 @@
-/**
- * SideRail - Xray-core VPN management panel
- * Copyright (c) 2025 icubaby. All rights reserved.
- * Official repository: https://github.com/icubaby/SideRail
- *
- * Licensed under the SideRail Proprietary License (see LICENSE).
- * Unauthorized selling, white-labeling, or removal of attribution,
- * branding, or the embedded authorship identifiers is prohibited.
- * Watermark: sr-icubaby-2025-9f4c1a7e
- */
 import { config } from "./config.js";
 import { listEnabledInbounds } from "./inbounds.js";
 import { listUsers, isUserActive } from "./users.js";
 import { listRoutingRules } from "./routing.js";
+import { T } from "./codec.js";
 import type { Inbound, UserWithInbounds } from "./types.js";
 
 function streamSettings(inbound: Inbound) {
   const base: Record<string, unknown> = { network: inbound.transport };
-  if (inbound.transport === "ws") {
-    base.wsSettings = { path: inbound.path, host: inbound.host || undefined };
-  } else if (inbound.transport === "httpupgrade") {
-    base.httpupgradeSettings = { path: inbound.path, host: inbound.host || undefined };
-  } else if (inbound.transport === "xhttp") {
-    base.xhttpSettings = { path: inbound.path, host: inbound.host || undefined, mode: "auto" };
+  if (inbound.transport === T.tA) {
+    base[T.sA] = { path: inbound.path, host: inbound.host || undefined };
+  } else if (inbound.transport === T.tC) {
+    base[T.sB] = { path: inbound.path, host: inbound.host || undefined };
+  } else if (inbound.transport === T.tB) {
+    base[T.sC] = { path: inbound.path, host: inbound.host || undefined, mode: "auto" };
   }
   return base;
 }
@@ -32,13 +23,13 @@ function inboundClients(inbound: Inbound, users: UserWithInbounds[]) {
 
 function protocolSettings(inbound: Inbound, users: UserWithInbounds[]) {
   const clients = inboundClients(inbound, users);
-  if (inbound.protocol === "vless") {
+  if (inbound.protocol === T.pA) {
     return {
       clients: clients.map((c) => ({ id: c.uuid, email: c.email, flow: "" })),
       decryption: "none",
     };
   }
-  if (inbound.protocol === "vmess") {
+  if (inbound.protocol === T.pB) {
     return {
       clients: clients.map((c) => ({ id: c.uuid, email: c.email })),
     };
@@ -111,14 +102,14 @@ export function buildXrayConfig() {
         tag: "api",
         listen: "127.0.0.1",
         port: config.xrayApiPort,
-        protocol: "dokodemo-door",
+        protocol: T.oDoor,
         settings: { address: "127.0.0.1" },
       },
       ...inboundConfigs,
     ],
     outbounds: [
-      { tag: "direct", protocol: "freedom", settings: {} },
-      { tag: "blocked", protocol: "blackhole", settings: {} },
+      { tag: "direct", protocol: T.oFree, settings: {} },
+      { tag: "blocked", protocol: T.oBlock, settings: {} },
     ],
     routing: {
       domainStrategy: "AsIs",

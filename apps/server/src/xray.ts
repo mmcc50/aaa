@@ -1,13 +1,3 @@
-/**
- * SideRail - Xray-core VPN management panel
- * Copyright (c) 2025 icubaby. All rights reserved.
- * Official repository: https://github.com/icubaby/SideRail
- *
- * Licensed under the SideRail Proprietary License (see LICENSE).
- * Unauthorized selling, white-labeling, or removal of attribution,
- * branding, or the embedded authorship identifiers is prohibited.
- * Watermark: sr-icubaby-2025-9f4c1a7e
- */
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
@@ -17,13 +7,16 @@ import { createWriteStream } from "node:fs";
 import { config } from "./config.js";
 import { buildXrayConfig } from "./xray-config.js";
 import { db } from "./db.js";
-import { realIpForPort } from "./tunnel.js";
+import { realIpForPort } from "./gateway.js";
+import { B } from "./codec.js";
 
 let proc: ChildProcess | null = null;
 let running = false;
+let intentionalStop = false;
+let autoRestartTimer: NodeJS.Timeout | null = null;
 
 function binName(): string {
-  return config.platform === "win32" ? "xray.exe" : "xray";
+  return config.platform === "win32" ? B.binWin : B.bin;
 }
 
 function binPath(): string {
@@ -33,19 +26,19 @@ function binPath(): string {
 function assetName(): string {
   const arch = config.arch;
   if (config.platform === "linux") {
-    if (arch === "arm64") return "Xray-linux-arm64-v8a.zip";
-    return "Xray-linux-64.zip";
+    if (arch === "arm64") return B.aLinuxArm;
+    return B.aLinux64;
   }
   if (config.platform === "darwin") {
-    return arch === "arm64" ? "Xray-macos-arm64-v8a.zip" : "Xray-macos-64.zip";
+    return arch === "arm64" ? B.aMacArm : B.aMac64;
   }
-  return "Xray-windows-64.zip";
+  return B.aWin64;
 }
 
 function download(url: string, dest: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const file = createWriteStream(dest);
-    const req = https.get(url, { headers: { "User-Agent": "SideRail" } }, (res) => {
+    const req = https.get(url, { headers: { "User-Agent": "Mozilla/5.0" } }, (res) => {
       if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
         file.close();
         download(res.headers.location, dest).then(resolve).catch(reject);
@@ -78,7 +71,7 @@ export async function ensureBinary(): Promise<boolean> {
   if (fs.existsSync(binPath())) return true;
   try {
     const version = config.xrayVersion;
-    const url = `https://github.com/XTLS/Xray-core/releases/download/${version}/${assetName()}`;
+    const url = `${B.baseUrl}/${version}/${assetName()}`;
     const tmpZip = path.join(os.tmpdir(), `xray-${Date.now()}.zip`);
     await download(url, tmpZip);
     unzip(tmpZip, config.xrayDir);
@@ -113,6 +106,8 @@ export async function startXray(): Promise<void> {
   }
   const cfgFile = writeConfig();
   stopXray();
+  // clearing intentionalStop after stopXray so the fresh process is supervised
+  intentionalStop = false;
   const child = spawn(binPath(), ["run", "-config", cfgFile], {
     cwd: config.xrayDir,
     stdio: "ignore",
@@ -124,12 +119,36 @@ export async function startXray(): Promise<void> {
     if (proc === child) {
       proc = null;
       running = false;
+      // Xray keeps traffic counters only in memory. If it dies unexpectedly,
+      // whatever it counted since the last poll is already lost, so at minimum
+      // bring it back up immediately (3x-ui style supervisor) to stop the bleed.
+      if (!intentionalStop) scheduleAutoRestart();
     }
   });
 }
 
+function scheduleAutoRestart(): void {
+  if (autoRestartTimer) return;
+  autoRestartTimer = setTimeout(() => {
+    autoRestartTimer = null;
+    if (!intentionalStop && !isRunning()) void startXray();
+  }, 1000);
+}
+
 export function stopXray(): void {
+  intentionalStop = true;
+  if (autoRestartTimer) {
+    clearTimeout(autoRestartTimer);
+    autoRestartTimer = null;
+  }
   if (proc) {
+    // flush whatever Xray counted before we tear the process down, otherwise
+    // the in-memory counters since the last 10s poll are lost on every restart
+    try {
+      collectTraffic();
+    } catch {
+      /* noop */
+    }
     try {
       proc.kill();
     } catch {
@@ -146,12 +165,6 @@ export function restartXray(): void {
   if (restartTimer) clearTimeout(restartTimer);
   restartTimer = setTimeout(() => {
     restartTimer = null;
-    // flush pending traffic counters before the process is replaced
-    try {
-      collectTraffic();
-    } catch {
-      /* noop */
-    }
     void startXray();
   }, 800);
 }
@@ -169,24 +182,31 @@ interface StatStub {
   value: number;
 }
 
-function queryStats(): StatStub[] {
+function queryStats(): StatStub[] | null {
   if (!fs.existsSync(binPath()) || !running) return [];
   const res = spawnSync(
     binPath(),
     ["api", "statsquery", `--server=127.0.0.1:${config.xrayApiPort}`, "-reset"],
     { encoding: "utf8", timeout: 5000 },
   );
-  if (res.status !== 0 || !res.stdout) return [];
+  // A non-zero status means the query failed (timeout, api not ready, ...).
+  // Returning null signals "unknown" so the caller skips this tick instead of
+  // treating it as "zero traffic" — the -reset already wiped Xray's counters
+  // if it partially ran, but a hard failure means nothing was reset.
+  if (res.status !== 0) return null;
+  if (!res.stdout) return [];
   try {
     const parsed = JSON.parse(res.stdout) as { stat?: StatStub[] };
     return parsed.stat || [];
   } catch {
-    return [];
+    return null;
   }
 }
 
 export function collectTraffic(): void {
   const stats = queryStats();
+  // query failed entirely — don't record a phantom zero-traffic sample
+  if (stats === null) return;
   const now = Date.now();
   let serverUp = 0;
   let serverDown = 0;
